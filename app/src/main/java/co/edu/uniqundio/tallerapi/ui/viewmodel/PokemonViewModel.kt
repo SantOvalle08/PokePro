@@ -140,7 +140,12 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
 
     private fun applyNonDestructiveFilter(source: List<PokemonResult>, query: String): List<PokemonResult> {
         if (query.isBlank()) return source
-        return source.filter { it.name.contains(query.trim(), ignoreCase = true) }
+        val trimmed = query.trim()
+        return source.filter { pokemon ->
+            pokemon.name.contains(trimmed, ignoreCase = true) ||
+            pokemon.id.toString() == trimmed ||
+            pokemon.id.toString().contains(trimmed)
+        }
     }
 
     fun retry() {
