@@ -2,11 +2,13 @@ package co.edu.uniqundio.tallerapi.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,7 +39,7 @@ fun PokemonListScreen(
     }
 
     LaunchedEffect(shouldLoadMore.value) {
-        if (shouldLoadMore.value && !uiState.isLoadingMore && uiState.selectedType == null && uiState.searchQuery.isBlank()) {
+        if (shouldLoadMore.value && !uiState.isLoadingMore && uiState.selectedType == null && uiState.searchQuery.isBlank() && uiState.hasMore) {
             viewModel.loadPokemonList()
         }
     }
@@ -64,7 +66,7 @@ fun PokemonListScreen(
         }
 
         TopAppBar(
-            title = { Text("Pokédex - TallerAPI", fontWeight = FontWeight.Bold) },
+            title = { Text("PokePro", fontWeight = FontWeight.Bold) },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
         )
 
@@ -74,21 +76,56 @@ fun PokemonListScreen(
             onValueChange = { viewModel.onSearchQueryChanged(it) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             placeholder = { Text("Buscar Pokémon por nombre...") },
             singleLine = true
         )
 
-        // Error message if any
-        if (uiState.errorMessage != null) {
-            Text(
-                text = uiState.errorMessage ?: "",
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
+        // Type Filter Chips Row
+        if (uiState.availableTypes.isNotEmpty()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = uiState.selectedType == null,
+                    onClick = { viewModel.onTypeSelected(null) },
+                    label = { Text("Todos") }
+                )
+                uiState.availableTypes.forEach { typeName ->
+                    FilterChip(
+                        selected = uiState.selectedType == typeName,
+                        onClick = { viewModel.onTypeSelected(typeName) },
+                        label = { Text(typeName.replaceFirstChar { it.uppercase() }) }
+                    )
+                }
+            }
         }
 
-        if (uiState.isLoading && uiState.pokemonList.isEmpty()) {
+        // Error message & Retry Button
+        if (uiState.errorMessage != null) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = uiState.errorMessage ?: "",
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.weight(1f)
+                )
+                Button(onClick = { viewModel.retry() }) {
+                    Text("Reintentar")
+                }
+            }
+        }
+
+        if (uiState.isLoading && uiState.filteredList.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -105,7 +142,7 @@ fun PokemonListScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                itemsIndexed(uiState.pokemonList) { _, pokemon ->
+                itemsIndexed(uiState.filteredList) { _, pokemon ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
