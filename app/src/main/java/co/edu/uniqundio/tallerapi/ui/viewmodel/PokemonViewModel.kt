@@ -36,7 +36,7 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
     val uiState: StateFlow<PokemonUiState> = _uiState.asStateFlow()
 
     private var currentOffset = 0
-    private val pageSize = 20
+    private val pageSize = 150
     private var allPokemonsCache: List<PokemonResult> = emptyList()
     private var typePokemonsCache: List<PokemonResult>? = null
 
