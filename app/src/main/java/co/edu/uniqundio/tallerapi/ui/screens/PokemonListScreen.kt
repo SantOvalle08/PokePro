@@ -39,7 +39,7 @@ fun PokemonListScreen(
     }
 
     LaunchedEffect(shouldLoadMore.value) {
-        if (shouldLoadMore.value && !uiState.isLoadingMore && uiState.selectedType == null && uiState.searchQuery.isBlank() && uiState.hasMore) {
+        if (shouldLoadMore.value && !uiState.isLoadingMore && uiState.selectedType == null && uiState.hasMore) {
             viewModel.loadPokemonList()
         }
     }
